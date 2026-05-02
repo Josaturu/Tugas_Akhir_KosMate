@@ -1,0 +1,49 @@
+name: test_flutter
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.1.0
+  shared_preferences: ^2.2.2
+  provider: ^6.1.1
+  intl: ^0.19.0
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
+  flutter_lints: ^6.0.0
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/Icon_Pure.png" # Pakai yang baru agar proporsional
+  adaptive_icon_background: "#FFFFFF" # Background putih agar menyatu dengan logo
+  adaptive_icon_foreground: "assets/icons/Icon_Pure.png"
+
+flutter_native_splash:
+  color: "#FFFFFF" # Ubah ke putih biar logonya tidak terlihat "kotak" di tengah
+  image: "assets/icons/Icon_Pure.png"
+  android: true
+  ios: true
+  android_12:
+    color: "#FFFFFF"
+    image: "assets/icons/Icon_Pure.png"
+  android_gravity: center
+  ios_content_mode: center
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/icons/Icon_Pure.png
