@@ -7,6 +7,8 @@ import 'owner/owner_complaint_list_screen.dart';
 import 'tenant/tenant_complaint_screen.dart';
 import 'owner/owner_transaction_list.dart';
 import 'tenant/tenant_transaction_list.dart';
+import '../widgets/shimmer_loading.dart';
+import '../widgets/error_state.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -56,7 +58,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
               ),
 
               if (snapshot.connectionState == ConnectionState.waiting)
-                const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: Colors.orange)))
+                const SliverToBoxAdapter(
+                  child: ListSkeleton(itemCount: 5),
+                )
+              else if (snapshot.hasError)
+                SliverFillRemaining(
+                  child: ErrorStateWidget(
+                    errorMessage: 'Gagal mengambil notifikasi. Pastikan server aktif.',
+                    onRetry: _refreshNotifications,
+                  ),
+                )
               else if (snapshot.data == null || (snapshot.data as List).isEmpty)
                 const SliverFillRemaining(child: Center(child: Text('Tidak ada notifikasi.')))
               else

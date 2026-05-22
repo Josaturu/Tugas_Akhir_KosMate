@@ -1,0 +1,72 @@
+@startuml
+title Class Diagram: Sistem KosMate (Teknis)
+
+package "Backend Models (Laravel)" {
+    class User {
+        +int id
+        +string name
+        +string email
+        +string password
+        +string role
+        +string status
+        +penyewaans()
+    }
+
+    class Kamar {
+        +int id
+        +string nomor_kamar
+        +string tipe_kamar
+        +double harga_sewa
+        +string status
+        +string keterangan
+        +penyewaans()
+    }
+
+    class Penyewaan {
+        +int id
+        +int users_id
+        +int kamars_id
+        +date tanggal_masuk
+        +date tanggal_keluar
+        +int lama_sewa
+        +string status_sewa
+        +pembayarans()
+    }
+
+    class Pembayaran {
+        +int id
+        +int penyewaans_id
+        +date periode
+        +double jumlah
+        +date tanggal_bayar
+        +string status
+        +string metode
+        +string bukti_bayar
+    }
+
+    class Complaint {
+        +int id
+        +int user_id
+        +string title
+        +text description
+        +string status
+    }
+}
+
+package "Mobile Services (Flutter)" {
+    class ApiService {
+        +login(email, password)
+        +getKamar()
+        +createKamar(data)
+        +getPembayaran()
+        +konfirmasiPembayaran(id)
+        +sendBroadcastNotification(title, message)
+    }
+}
+
+User "1" -- "0..*" Penyewaan : has
+Kamar "1" -- "0..*" Penyewaan : linked to
+Penyewaan "1" -- "0..*" Pembayaran : generates
+User "1" -- "0..*" Complaint : submits
+
+@enduml

@@ -1,0 +1,33 @@
+@startuml
+title Alur Sistem Berjalan (Manual) - Manajemen KosMate
+
+actor "Calon Penyewa" as Tenant
+actor "Pemilik Kos" as Owner
+database "Buku Besar / Nota" as DB
+
+== Proses Pendaftaran & Sewa ==
+Tenant -> Owner : Menanyakan ketersediaan kamar (Lisan/WA)
+Owner -> Owner : Cek kamar kosong secara manual
+alt Kamar Tersedia
+    Owner -> Tenant : Memberikan info harga & aturan
+    Tenant -> Owner : Memberikan data diri (Foto KTP)
+    Owner -> DB : Mencatat data penyewa di buku besar
+else Kamar Penuh
+    Owner -> Tenant : Menginfokan kamar penuh
+end
+
+== Proses Pembayaran ==
+Owner -> Tenant : Menagih sewa bulan berjalan (WA/Lisan)
+Tenant -> Owner : Bayar Tunai / Transfer Bank
+alt Pembayaran Tunai
+    Owner -> Tenant : Memberikan kwitansi fisik
+else Pembayaran Transfer
+    Tenant -> Owner : Kirim bukti screenshot transfer via WA
+end
+Owner -> DB : Mencatat tanggal bayar di buku besar
+
+== Proses Komplain ==
+Tenant -> Owner : Menyampaikan keluhan (Lisan/WA)
+Owner -> Tenant : Menanggapi keluhan
+Owner -> Owner : Memperbaiki kerusakan (Jika ada)
+@enduml

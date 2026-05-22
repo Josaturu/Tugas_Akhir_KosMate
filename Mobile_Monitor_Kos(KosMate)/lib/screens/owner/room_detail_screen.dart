@@ -6,6 +6,7 @@ import 'add_tenancy_screen.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/global_sliver_header.dart';
 import '../../widgets/animations.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class RoomDetailScreen extends StatefulWidget {
   final Kamar kamar;
@@ -175,7 +176,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   }
 
   Widget _buildTenantSection() {
-    if (_isLoadingTenancy) return const Center(child: Padding(padding: EdgeInsets.all(30), child: CircularProgressIndicator(color: Colors.orange)));
+    if (_isLoadingTenancy) return const ListSkeleton(itemCount: 1);
     
     final user = _tenancyData?['user'];
     if (user == null) {

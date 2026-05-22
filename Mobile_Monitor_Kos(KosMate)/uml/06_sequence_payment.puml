@@ -1,0 +1,38 @@
+@startuml
+title Sequence Diagram: Pembayaran Tagihan & Verifikasi
+
+actor Tenant
+boundary "TenantBillingScreen" as UI_T
+control "PembayaranController" as API
+database "Pembayarans Table" as DB
+actor Owner
+boundary "OwnerTransactionList" as UI_O
+
+== Proses Pembayaran (Tenant) ==
+Tenant -> UI_T : Input Bukti & Pilih Metode
+UI_T -> API : POST /api/pembayaran/upload-bukti/{id}
+activate API
+API -> DB : Update status='menunggu_konfirmasi', bukti_bayar, metode
+activate DB
+DB --> API : Success
+deactivate DB
+API --> UI_T : JSON {message: 'Berhasil lapor'}
+deactivate API
+
+== Proses Verifikasi (Owner) ==
+Owner -> UI_O : Refresh Data Transaksi
+UI_O -> API : GET /api/pembayaran
+API -> DB : Fetch All Transactions
+DB --> API : List Transactions
+API --> UI_O : List UI
+Owner -> UI_O : Klik Konfirmasi (ID)
+UI_O -> API : POST /api/pembayaran/konfirmasi/{id}
+activate API
+API -> DB : Update status='lunas'
+activate DB
+DB --> API : Success
+deactivate DB
+API --> UI_O : JSON {message: 'Pembayaran Lunas'}
+deactivate API
+
+@enduml

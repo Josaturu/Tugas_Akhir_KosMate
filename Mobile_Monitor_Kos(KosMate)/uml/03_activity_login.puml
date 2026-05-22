@@ -1,0 +1,26 @@
+@startuml
+title Activity Diagram: Login Sistem
+
+start
+:Membuka Aplikasi;
+:Halaman Splash Screen (3 detik);
+:Masuk ke Halaman Login;
+repeat
+  :Input Email & Password;
+  :Klik Tombol Login;
+  :Validasi ke Server API;
+  if (Data Valid?) then (Ya)
+    :Simpan Token (Sanctum) & Role di Local Storage;
+    if (Role == 'pemilik'?) then (Ya)
+      :Redirect ke Owner Dashboard;
+    else (Tidak/Penyewa)
+      :Redirect ke Tenant Dashboard;
+    endif
+    stop
+  else (Tidak)
+    :Tampilkan Pesan Error;
+  endif
+backward :Perbaiki Input;
+repeat while (Coba lagi?) is (Ya)
+stop
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+title Activity Diagram: Pembayaran Tagihan & Verifikasi
+
+|Penyewa (Tenant)|
+start
+:Buka Menu Tagihan;
+:Pilih Tagihan Belum Bayar;
+:Pilih Metode (Transfer/Tunai);
+if (Metode == Transfer?) then (Ya)
+  :Upload Bukti Transfer;
+else (Tunai)
+  :Konfirmasi Lapor Tunai;
+endif
+:Status Berubah: 'Menunggu Konfirmasi';
+
+|Pemilik (Owner)|
+:Notifikasi Tagihan Masuk;
+:Buka Riwayat Transaksi;
+:Cek Bukti & Metode Pembayaran;
+if (Data Sesuai?) then (Ya)
+  :Klik Tombol Konfirmasi;
+  :Sistem Update Status: 'Lunas';
+  :Kirim Notifikasi ke Tenant;
+else (Tidak)
+  :Hubungi Tenant / Tolak;
+endif
+
+|Penyewa (Tenant)|
+:Lihat Status Tagihan: 'Lunas';
+stop
+@enduml

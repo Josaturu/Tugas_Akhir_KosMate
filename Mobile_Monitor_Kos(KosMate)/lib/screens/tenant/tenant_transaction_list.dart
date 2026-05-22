@@ -4,6 +4,8 @@ import '../../utils/formatters.dart';
 import '../../widgets/global_sliver_header.dart';
 import '../../widgets/animations.dart';
 import '../../utils/snackbar_helper.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/error_state.dart';
 
 class TenantTransactionList extends StatefulWidget {
   const TenantTransactionList({super.key});
@@ -142,11 +144,22 @@ class _TenantTransactionListState extends State<TenantTransactionList> with Auto
       body: FutureBuilder<dynamic>(
         future: _transactionFuture,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Scaffold(
+              backgroundColor: const Color(0xFFF8F9FA),
+              body: ErrorStateWidget(
+                onRetry: () => _refreshTransactions(),
+              ),
+            );
+          }
+
+          final isLoading = snapshot.connectionState == ConnectionState.waiting;
+
           return RefreshIndicator(
             onRefresh: () async => _refreshTransactions(),
             color: Colors.orange,
             child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: isLoading ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
               slivers: [
                 GlobalSliverHeader(
                   title: 'Tagihan & Riwayat',
@@ -154,9 +167,9 @@ class _TenantTransactionListState extends State<TenantTransactionList> with Auto
                   showBackButton: true,
                 ),
 
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator(color: Colors.orange)),
+                if (isLoading)
+                  const SliverToBoxAdapter(
+                    child: ListSkeleton(),
                   )
                 else if (snapshot.data is! List || (snapshot.data as List).isEmpty)
                   SliverFillRemaining(

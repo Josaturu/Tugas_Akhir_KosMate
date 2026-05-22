@@ -4,11 +4,14 @@ import 'owner_report_screen.dart';
 import 'owner_announcement_screen.dart';
 import 'owner_complaint_list_screen.dart';
 import 'owner_transaction_list.dart';
+import 'owner_room_list_screen.dart';
 import '../../widgets/global_sliver_header.dart';
 import '../../widgets/notification_bell.dart';
 import '../../widgets/owner/monitoring_card.dart';
 import '../../widgets/owner/kamar_card.dart';
 import '../../widgets/quick_menu_grid.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/error_state.dart';
 
 class OwnerDashboard extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -24,6 +27,7 @@ class OwnerDashboardState extends State<OwnerDashboard>
   List<dynamic> _filteredKamar = [];
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
+  bool _hasError = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -47,7 +51,10 @@ class OwnerDashboardState extends State<OwnerDashboard>
 
   void refreshKamar() async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
     try {
       final data = await ApiService.getKamar();
       if (mounted) {
@@ -60,7 +67,10 @@ class OwnerDashboardState extends State<OwnerDashboard>
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Gagal memuat data kamar: $e')));
@@ -83,108 +93,116 @@ class OwnerDashboardState extends State<OwnerDashboard>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (_hasError) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: ErrorStateWidget(
+          onRetry: () => refreshKamar(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: RefreshIndicator(
         onRefresh: () async => refreshKamar(),
         color: Colors.orange,
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: _isLoading ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
           slivers: [
             _buildHeader(),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-                    _buildSearchAndFilter(),
-                    const SizedBox(height: 25),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Monitoring Kamar',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          'Diperbarui baru saja',
-                          style: TextStyle(color: Colors.grey, fontSize: 10),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    MonitoringCard(
-                      total: _allKamar.length,
-                      terisi: _allKamar
-                          .where(
-                            (k) =>
-                                k['status']?.toString().toLowerCase() ==
-                                'terisi',
-                          )
-                          .length,
-                      kosong: _allKamar
-                          .where(
-                            (k) =>
-                                k['status']?.toString().toLowerCase() ==
-                                'kosong',
-                          )
-                          .length,
-                    ),
-                    const SizedBox(height: 25),
-                    _buildQuickMenuGrid(),
-                    const SizedBox(height: 25),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Daftar Kamar',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Row(
-                            children: [
-                              Text(
-                                'Lihat Semua',
-                                style: TextStyle(
-                                  color: Colors.orange,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: Colors.orange,
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
             if (_isLoading)
               const SliverToBoxAdapter(
+                child: DashboardSkeleton(isOwner: true),
+              )
+            else ...[
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.all(50),
-                  child: Center(
-                    child: CircularProgressIndicator(color: Colors.orange),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildSearchAndFilter(),
+                      const SizedBox(height: 25),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Monitoring Kamar',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            'Diperbarui baru saja',
+                            style: TextStyle(color: Colors.grey, fontSize: 10),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      MonitoringCard(
+                        total: _allKamar.length,
+                        terisi: _allKamar
+                            .where(
+                              (k) =>
+                                  k['status']?.toString().toLowerCase() ==
+                                  'terisi',
+                            )
+                            .length,
+                        kosong: _allKamar
+                            .where(
+                              (k) =>
+                                  k['status']?.toString().toLowerCase() ==
+                                  'kosong',
+                            )
+                            .length,
+                      ),
+                      const SizedBox(height: 25),
+                      _buildQuickMenuGrid(),
+                      const SizedBox(height: 25),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Daftar Kamar',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const OwnerRoomListScreen()),
+                            ),
+                            child: const Row(
+                              children: [
+                                Text(
+                                  'Lihat Semua',
+                                  style: TextStyle(
+                                    color: Colors.orange,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.orange,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              )
-            else
+              ),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverList(
@@ -195,6 +213,7 @@ class OwnerDashboardState extends State<OwnerDashboard>
                   }, childCount: _filteredKamar.length),
                 ),
               ),
+            ],
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),

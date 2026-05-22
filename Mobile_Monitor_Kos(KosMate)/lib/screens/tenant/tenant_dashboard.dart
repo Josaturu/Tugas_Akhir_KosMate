@@ -9,6 +9,8 @@ import 'tenant_transaction_list.dart';
 import 'tenant_complaint_screen.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/quick_menu_grid.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/error_state.dart';
 
 class TenantDashboard extends StatefulWidget {
   const TenantDashboard({super.key});
@@ -45,8 +47,28 @@ class _TenantDashboardState extends State<TenantDashboard> with AutomaticKeepAli
     return FutureBuilder<dynamic>(
       future: Future.wait([_tenancyFuture, _pembayaranFuture, _profileFuture]),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF8F9FA),
+            body: ErrorStateWidget(
+              onRetry: () => _refreshData(),
+            ),
+          );
+        }
+
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.orange)));
+          return Scaffold(
+            backgroundColor: const Color(0xFFF8F9FA),
+            body: CustomScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              slivers: [
+                _buildHeader('...'),
+                const SliverToBoxAdapter(
+                  child: DashboardSkeleton(isOwner: false),
+                ),
+              ],
+            ),
+          );
         }
 
         final dataTenancy = snapshot.data?[0];
@@ -74,7 +96,7 @@ class _TenantDashboardState extends State<TenantDashboard> with AutomaticKeepAli
                         const SizedBox(height: 20),
                         if (hasTenancy) _buildKamarCard(dataTenancy) else _buildEmptyTenancyCard(),
                         const SizedBox(height: 18),
-                        _buildBillingSummarySection(dataPembayaran, hasTenancy),
+                        _buildBillingSummarySection(dataPembayaran, dataTenancy, hasTenancy),
                         const SizedBox(height: 22),
                         const DelayedFadeIn(
                           delay: 300,
@@ -195,7 +217,7 @@ class _TenantDashboardState extends State<TenantDashboard> with AutomaticKeepAli
     );
   }
 
-  Widget _buildBillingSummarySection(dynamic data, bool hasTenancy) {
+  Widget _buildBillingSummarySection(dynamic data, dynamic dataTenancy, bool hasTenancy) {
     final payments = data as List? ?? [];
     
     // Logika Status Tagihan
@@ -217,6 +239,12 @@ class _TenantDashboardState extends State<TenantDashboard> with AutomaticKeepAli
         statusValue = CurrencyFormat.convertToIdr(double.parse(pending['jumlah'].toString()), 0);
         dueDate = pending['periode']?.toString().substring(0, 10) ?? '-';
         valueColor = Colors.deepOrange;
+      } else {
+        statusValue = 'Lunas';
+        dueDate = dataTenancy != null && dataTenancy['tanggal_selesai'] != null
+            ? dataTenancy['tanggal_selesai'].toString().substring(0, 10)
+            : '-';
+        valueColor = Colors.green;
       }
     }
 

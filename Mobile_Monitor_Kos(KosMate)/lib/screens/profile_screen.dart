@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'auth/login_screen.dart';
 import '../widgets/global_sliver_header.dart';
+import '../widgets/shimmer_loading.dart';
+import '../widgets/error_state.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,10 +28,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       future: _profileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.orange)));
+          return const Scaffold(
+            backgroundColor: Color(0xFFF8F9FA),
+            body: ProfileSkeleton(),
+          );
         }
         if (snapshot.hasError) {
-          return Scaffold(body: Center(child: Text('Error: ${snapshot.error}')));
+          return Scaffold(
+            backgroundColor: const Color(0xFFF8F9FA),
+            body: ErrorStateWidget(
+              onRetry: () {
+                setState(() {
+                  _profileFuture = ApiService.getProfile();
+                });
+              },
+            ),
+          );
         }
 
         final user = snapshot.data;

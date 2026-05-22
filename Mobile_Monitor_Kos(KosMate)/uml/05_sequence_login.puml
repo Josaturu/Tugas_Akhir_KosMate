@@ -1,0 +1,30 @@
+@startuml
+title Sequence Diagram: Login Sistem
+
+actor User
+boundary "LoginScreen (Flutter)" as UI
+control "AuthController (Laravel)" as API
+database "Users Table" as DB
+entity "SharedPrefs / LocalStorage" as Local
+
+User -> UI : Input Email & Password
+User -> UI : Klik Login
+UI -> API : POST /api/login {email, password}
+activate API
+API -> DB : Check Credentials (Email)
+activate DB
+DB --> API : User Object & Hashed Password
+deactivate DB
+
+alt Sukses
+    API -> API : Generate Sanctum Token
+    API --> UI : JSON {token, user_data, success: true}
+    UI -> Local : Save Token & Role
+    UI -> User : Redirect to Dashboard (Owner/Tenant)
+else Gagal
+    API --> UI : JSON {message: 'Unauthorized', success: false}
+    UI -> User : Tampilkan Pesan Error
+end
+deactivate API
+
+@enduml

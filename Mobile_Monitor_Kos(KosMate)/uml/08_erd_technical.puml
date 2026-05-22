@@ -1,0 +1,79 @@
+@startuml
+title Entity Relationship Diagram (ERD Teknis) - Database KosMate
+
+entity "users" {
+    *id : BIGINT <<PK>>
+    --
+    *name : VARCHAR(255)
+    *email : VARCHAR(255) <<UNIQUE>>
+    *password : VARCHAR(255)
+    *role : ENUM('pemilik', 'penyewa')
+    no_hp : VARCHAR(20)
+    status : ENUM('aktif', 'nonaktif')
+    timestamps
+}
+
+entity "kamars" {
+    *id : BIGINT <<PK>>
+    --
+    *nomor_kamar : VARCHAR(50)
+    *tipe_kamar : VARCHAR(100)
+    *harga_sewa : DECIMAL(15,2)
+    *status : ENUM('kosong', 'terisi', 'maintenance')
+    keterangan : TEXT
+    timestamps
+}
+
+entity "penyewaans" {
+    *id : BIGINT <<PK>>
+    --
+    *users_id : BIGINT <<FK>>
+    *kamars_id : BIGINT <<FK>>
+    *tanggal_masuk : DATE
+    tanggal_keluar : DATE
+    *lama_sewa : INT
+    *status_sewa : ENUM('aktif', 'selesai', 'batal')
+    timestamps
+}
+
+entity "pembayarans" {
+    *id : BIGINT <<PK>>
+    --
+    *penyewaans_id : BIGINT <<FK>>
+    *periode : DATE
+    *jumlah : DECIMAL(15,2)
+    tanggal_bayar : DATETIME
+    *status : ENUM('pending', 'menunggu_konfirmasi', 'lunas', 'batal')
+    metode : VARCHAR(50)
+    bukti_bayar : VARCHAR(255)
+    keterangan : TEXT
+    timestamps
+}
+
+entity "complaints" {
+    *id : BIGINT <<PK>>
+    --
+    *user_id : BIGINT <<FK>>
+    *title : VARCHAR(255)
+    *description : TEXT
+    *status : ENUM('pending', 'proses', 'selesai')
+    timestamps
+}
+
+entity "notifications" {
+    *id : BIGINT <<PK>>
+    --
+    *user_id : BIGINT <<FK>>
+    *title : VARCHAR(255)
+    *message : TEXT
+    is_read : BOOLEAN
+    timestamps
+}
+
+users ||--o{ penyewaans : "sebagai penyewa"
+kamars ||--o{ penyewaans : "disewa dalam"
+penyewaans ||--o{ pembayarans : "menghasilkan"
+users ||--o{ complaints : "mengajukan"
+users ||--o{ notifications : "menerima"
+
+@enduml

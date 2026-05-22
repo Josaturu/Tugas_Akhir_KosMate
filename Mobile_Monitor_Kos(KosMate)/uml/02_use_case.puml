@@ -1,0 +1,37 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Pemilik (Owner)" as Owner
+actor "Penyewa (Tenant)" as Tenant
+
+rectangle "Sistem KosMate (Sistem Usulan)" {
+    usecase "Login & Logout" as UC1
+    usecase "Kelola Data Kamar" as UC2
+    usecase "Kelola Data Penyewa" as UC3
+    usecase "Lihat Laporan Keuangan" as UC4
+    usecase "Konfirmasi Pembayaran" as UC5
+    usecase "Kirim Pengumuman (Broadcast)" as UC6
+    
+    usecase "Lihat Info Kamar & Tagihan" as UC7
+    usecase "Input/Bayar Tagihan" as UC8
+    usecase "Input Komplain" as UC9
+    usecase "Lihat Riwayat Transaksi" as UC10
+    usecase "Lihat Pengumuman" as UC11
+}
+
+Owner -- UC1
+Owner -- UC2
+Owner -- UC3
+Owner -- UC4
+Owner -- UC5
+Owner -- UC6
+
+Tenant -- UC1
+Tenant -- UC7
+Tenant -- UC8
+Tenant -- UC9
+Tenant -- UC10
+Tenant -- UC11
+
+@enduml

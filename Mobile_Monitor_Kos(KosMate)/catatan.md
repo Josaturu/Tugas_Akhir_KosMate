@@ -3,6 +3,15 @@
 Dokumen ini mencatat riwayat perubahan (penambahan, pengubahan, dan penghapusan) pada aplikasi Info Kosan.
 Untuk melihat alur kerja aplikasi, silakan buka file `workflow_kosan.md`.
 
+## [Versi 1.8.0] - Shimmer Skeleton, Smart Tenant Due Date & Network Error Handler
+**Pembaruan & Perbaikan:**
+- **Loading UI Modern (Shimmer Skeleton)**: Menggantikan `CircularProgressIndicator` dengan animasi kerangka muatan statis (skeleton loader) di seluruh halaman yang membutuhkan pengambilan data API, memberikan feedback visual yang lebih responsif dan modern.
+- **Smart Tenant Due Date**: Menyesuaikan logika tanggal jatuh tempo pada dashboard penyewa. Jika seluruh tagihan sudah lunas, jatuh tempo akan menampilkan tanggal selesai sewa berdasarkan data Tenancy. Jika masih ada tagihan, jatuh tempo menampilkan periode tagihan aktif.
+- **Network Error Handler**: Mengintegrasikan `ErrorStateWidget` khusus untuk menangani skenario kegagalan koneksi ke API (seperti server offline atau localtunnel terputus). Dilengkapi tombol "Coba Lagi" untuk penyegaran data tanpa perlu merefresh halaman utama.
+- **Dukungan Halaman Lengkap**: 
+  - Pembaruan merata pada Dashboard, Transaksi, Laporan, Komplain, dan Daftar Pengguna.
+  - Perombakan penggunaan `FutureBuilder` di sisi Frontend untuk membedakan secara visual antara `waiting`, `error`, dan `hasData`.
+
 ## [Versi 1.7.0] - Backend Stability, Room Deletion & Smart Billing
 **Pembaruan & Perbaikan:**
 - **Critical Data Persistence Fix**: Resolusi masalah gagal simpan data kamar baru di database dengan memigrasikan Model Laravel dari PHP Attributes (`#[Fillable]`) ke properti `$fillable` standar untuk kompatibilitas lintas versi Laravel.
@@ -123,3 +132,61 @@ Untuk melihat alur kerja aplikasi, silakan buka file `workflow_kosan.md`.
 **Dihapus:**
 - Menghapus template counter bawaan Flutter (`MyHomePage`).
 - Menghapus `welcome_screen.dart` karena alurnya digabung ke `login_screen.dart`.
+
+---
+
+# Panduan Pengembangan (Development Setup Guide)
+
+Bagian ini berisi panduan teknis untuk menghubungkan Frontend (Flutter) dengan Backend (Laravel API) selama proses pengembangan, baik menggunakan emulator maupun perangkat fisik.
+
+---
+
+## 1. ADB Reverse (Rekomendasi untuk Emulator Android)
+
+### Fungsi bagi Pengembangan:
+`adb reverse` digunakan untuk meneruskan lalu lintas jaringan dari port emulator Android ke port komputer host (laptop).
+* **Masalah**: Emulator Android berjalan di jaringan virtual terisolasi. Jika aplikasi Flutter memanggil `http://localhost:8000`, ia akan mencari port tersebut di dalam emulator itu sendiri, sehingga menghasilkan error *Connection Refused*.
+* **Solusi**: `adb reverse` membuat jembatan langsung dari emulator ke laptop.
+* **Keuntungan**: Sangat cepat (koneksi lokal, tanpa internet) dan kamu tidak perlu mengubah base URL di Flutter jika laptop berganti jaringan WiFi (IP laptop berubah).
+
+### Langkah Setup:
+1. Jalankan emulator Android kamu (melalui VS Code atau Android Studio).
+2. Setelah emulator menyala penuh, buka terminal di laptop dan jalankan perintah:
+   ```powershell
+   adb reverse tcp:8000 tcp:8000
+   ```
+   *(Catatan: Sesuaikan `8000` dengan port tempat Laravel API berjalan).*
+
+### Penyesuaian Kode:
+Pada file `lib/services/api_service.dart`, atur `baseUrl` ke `localhost`:
+```dart
+static const String baseUrl = "http://localhost:8000/api";
+```
+
+---
+
+## 2. Localtunnel (Rekomendasi untuk HP Fisik / Demo Jarak Jauh)
+
+### Fungsi bagi Pengembangan:
+Localtunnel membuat terowongan aman (secure tunnel) dari internet global langsung ke port lokal komputer kamu, menghasilkan URL publik dengan protokol HTTPS.
+* **Masalah**: Menguji aplikasi di HP fisik yang dicolok kabel biasanya memerlukan konfigurasi IP lokal (`192.168.x.x`) dan mengharuskan kedua perangkat berada di WiFi yang sama. Selain itu, Android secara default memblokir request non-HTTPS (`http://`).
+* **Solusi**: Localtunnel mengekspos port Laravel lokal kamu ke internet secara gratis dan instan dengan enkripsi SSL/HTTPS.
+* **Keuntungan**: HP fisik bisa mengakses API Laravel meskipun menggunakan paket data seluler di luar rumah, dan kamu bisa membagikan URL ini ke orang lain (misal bimbingan dengan dosen pembimbing) secara real-time.
+
+### Langkah Setup:
+1. Pastikan Node.js sudah terinstal di komputermu.
+2. Jalankan Laravel API (`php artisan serve`).
+3. Buka terminal baru dan jalankan perintah:
+   ```powershell
+   npx localtunnel --port 8000
+   ```
+   *(Tips: Jika ingin nama subdomain tetap dan tidak acak setiap kali di-restart, gunakan parameter `--subdomain`, contoh: `npx localtunnel --port 8000 --subdomain kosmate-api`)*.
+
+### Penyesuaian Kode:
+1. Salin URL publik yang dihasilkan oleh localtunnel (misal: `https://kosmate-api.loca.lt`).
+2. Tempelkan URL tersebut ke `baseUrl` di file `lib/services/api_service.dart`:
+   ```dart
+   static const String baseUrl = "https://kosmate-api.loca.lt/api";
+   ```
+3. **Penting**: Saat pertama kali mengakses link localtunnel dari browser/perangkat, biasanya ada halaman intersisial (halaman pengaman dari localtunnel). Pastikan untuk mengklik tombol konfirmasi sekali pada browser HP agar request API dari Flutter tidak terhambat halaman tersebut.
+

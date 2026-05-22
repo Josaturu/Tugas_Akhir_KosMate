@@ -3,6 +3,8 @@ import '../../services/api_service.dart';
 import '../../widgets/global_sliver_header.dart';
 import '../../widgets/animations.dart';
 import '../../utils/snackbar_helper.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/error_state.dart';
 
 class TenantComplaintScreen extends StatefulWidget {
   const TenantComplaintScreen({super.key});
@@ -214,7 +216,18 @@ class _TenantComplaintScreenState extends State<TenantComplaintScreen> with Auto
               future: _complaintsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: Colors.orange)));
+                  return const SliverToBoxAdapter(
+                    child: ListSkeleton(itemCount: 4),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return SliverFillRemaining(
+                    child: ErrorStateWidget(
+                      errorMessage: 'Gagal mengambil data komplain. Pastikan server aktif.',
+                      onRetry: _refreshData,
+                    ),
+                  );
                 }
                 
                 final complaints = snapshot.data as List? ?? [];

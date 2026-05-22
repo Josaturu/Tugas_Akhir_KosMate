@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/global_sliver_header.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/error_state.dart';
 
 
 class OwnerUserList extends StatefulWidget {
@@ -44,12 +46,15 @@ class _OwnerUserListState extends State<OwnerUserList> {
 
               // Content Section
               if (snapshot.connectionState == ConnectionState.waiting)
-                const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator(color: Colors.orange)),
+                const SliverToBoxAdapter(
+                  child: ListSkeleton(itemCount: 4),
                 )
               else if (snapshot.hasError)
                 SliverFillRemaining(
-                  child: Center(child: Text('Gagal memuat data: ${snapshot.error}')),
+                  child: ErrorStateWidget(
+                    errorMessage: 'Gagal mengambil data pengguna. Pastikan server aktif.',
+                    onRetry: _refreshUsers,
+                  ),
                 )
               else ...[
                 _buildUserSliverList(snapshot.data),

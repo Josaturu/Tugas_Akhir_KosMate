@@ -3,6 +3,8 @@ import '../../services/api_service.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/global_sliver_header.dart';
 import '../../widgets/animations.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/error_state.dart';
 
 class OwnerReportScreen extends StatefulWidget {
   const OwnerReportScreen({super.key});
@@ -18,6 +20,7 @@ class _OwnerReportScreenState extends State<OwnerReportScreen> {
   Map<String, dynamic>? _summary;
   List<dynamic> _payments = [];
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -26,7 +29,10 @@ class _OwnerReportScreenState extends State<OwnerReportScreen> {
   }
 
   Future<void> _fetchData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final summaryRes = await ApiService.getReportSummary(_selectedMonth, _selectedYear);
       final paymentRes = await ApiService.getPaymentReport(_selectedMonth, _selectedYear);
@@ -37,8 +43,10 @@ class _OwnerReportScreenState extends State<OwnerReportScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+      });
     }
   }
 
@@ -74,8 +82,16 @@ class _OwnerReportScreenState extends State<OwnerReportScreen> {
             ),
 
             if (_isLoading)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator(color: Colors.orange)),
+              const SliverToBoxAdapter(
+                child: ReportSkeleton(),
+              )
+            else if (_errorMessage != null)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: ErrorStateWidget(
+                  errorMessage: 'Gagal mengambil laporan keuangan. Pastikan koneksi server aktif.',
+                  onRetry: _fetchData,
+                ),
               )
             else ...[
               // Summary Cards

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../widgets/global_sliver_header.dart';
-
 import '../../utils/snackbar_helper.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/error_state.dart';
 
 class OwnerComplaintListScreen extends StatefulWidget {
   const OwnerComplaintListScreen({super.key});
@@ -53,7 +54,16 @@ class _OwnerComplaintListScreenState extends State<OwnerComplaintListScreen> {
               ),
 
               if (snapshot.connectionState == ConnectionState.waiting)
-                const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: Colors.orange)))
+                const SliverToBoxAdapter(
+                  child: ListSkeleton(itemCount: 4),
+                )
+              else if (snapshot.hasError)
+                SliverFillRemaining(
+                  child: ErrorStateWidget(
+                    errorMessage: 'Gagal mengambil data komplain. Pastikan server aktif.',
+                    onRetry: _refreshComplaints,
+                  ),
+                )
               else if (snapshot.data == null || (snapshot.data as List).isEmpty)
                 const SliverFillRemaining(child: Center(child: Text('Belum ada komplain masuk.')))
               else

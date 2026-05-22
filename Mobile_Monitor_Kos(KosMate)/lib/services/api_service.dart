@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiService {
   // Gunakan 10.0.2.2 untuk Emulator Android, atau IP asli laptop jika pakai HP fisik.
-  static const String baseUrl = "http://192.168.1.6:8000/api";
+  static const String baseUrl = "https://kosmate-api.loca.lt/api";
 
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();

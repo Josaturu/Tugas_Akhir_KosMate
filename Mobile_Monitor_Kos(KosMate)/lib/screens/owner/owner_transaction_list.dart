@@ -3,6 +3,8 @@ import '../../services/api_service.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/global_sliver_header.dart';
 import '../../utils/snackbar_helper.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/error_state.dart';
 
 class OwnerTransactionList extends StatefulWidget {
   const OwnerTransactionList({super.key});
@@ -54,11 +56,22 @@ class _OwnerTransactionListState extends State<OwnerTransactionList> {
       body: FutureBuilder<dynamic>(
         future: _transactionFuture,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Scaffold(
+              backgroundColor: const Color(0xFFF8F9FA),
+              body: ErrorStateWidget(
+                onRetry: () => _refreshTransactions(),
+              ),
+            );
+          }
+
+          final isLoading = snapshot.connectionState == ConnectionState.waiting;
+
           return RefreshIndicator(
             onRefresh: () async => _refreshTransactions(),
             color: Colors.orange,
             child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: isLoading ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
               slivers: [
                 const GlobalSliverHeader(
                   title: 'Riwayat Pembayaran',
@@ -66,11 +79,11 @@ class _OwnerTransactionListState extends State<OwnerTransactionList> {
                   showBackButton: true,
                 ),
 
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator(color: Colors.orange)),
+                if (isLoading)
+                  const SliverToBoxAdapter(
+                    child: ListSkeleton(),
                   )
-                else if (snapshot.hasError || snapshot.data is! List)
+                else if (snapshot.data is! List || (snapshot.data as List).isEmpty)
                   const SliverFillRemaining(
                     child: Center(child: Text('Belum ada data transaksi.')),
                   )
